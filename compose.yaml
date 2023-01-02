@@ -1,0 +1,48 @@
+
+x-common: &common
+  restart: always
+  image: hello-world
+
+x-common-env: &common-env
+  SOME_ENV: "yes"
+
+x-common-pw:
+  
+
+services:
+  webapi:
+    image: hello-world
+
+  &instance island:
+    x-steamport: &steamport "27000:27000/udp"
+    x-gameport: &gameport "17000:17000/udp"
+    <<: *common
+    ports: 
+    - *steamport
+    - *gameport
+    <<: *common
+    environment:
+      STEAMPORT: *steamport
+      GAMEPORT: *gameport
+      INSTANCE_NAME: *instance
+      MODS: "123456789,987654321"
+
+      <<: *common-env
+
+  &instance valguero:
+    x-steamport: &steamport "27002:27002/udp"
+    x-gameport: &gameport "17002:17002/udp"
+    ports: 
+    - *steamport
+    - *gameport
+    <<: *common
+    environment:
+      STEAMPORT: *steamport
+      GAMEPORT: *gameport
+      INSTANCE_NAME: *instance
+      <<: *common-env
+  
+
+volumes:
+  gamefiles:
+  island:
