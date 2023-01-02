@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1.4
 
-FROM ubuntu:latest
+FROM phusion/baseimage:jammy
 
 LABEL org.opencontainers.image.authors="zokradonh <az@zok.xyz>" \
     org.opencontainers.image.title="ARK Survival Evolved Dedicated Server" \
     org.opencontainers.image.description="One container for one ARK instance" \
-    org.opencontainers.image.url="https://github.com/zokradonh/ark-docker-server" \
-    org.opencontainers.image.source="https://github.com/zokradonh/ark-docker-server"
+    org.opencontainers.image.url="https://github.com/zokradonh/ark-server-docker" \
+    org.opencontainers.image.source="https://github.com/zokradonh/ark-server-docker"
 
 # install prerequisites
 RUN <<EOT
@@ -36,6 +36,11 @@ RUN <<EOT
 EOT
 
 # install arkmanager
-RUN <<EOT
-    curl -sL -o https://git.io/arkmanager | sudo bash -s steam
-EOT
+RUN curl -sL -o https://git.io/arkmanager | bash -s steam
+
+# install startup script
+COPY --chmod=777 startup.sh /etc/rc.local
+COPY ark_env.py /scripts
+
+# use phusion's init system
+CMD ["/sbin/my_init"]
