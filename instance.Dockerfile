@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM phusion/baseimage:jammy
+FROM phusion/baseimage:jammy-1.0.1
 
 LABEL org.opencontainers.image.authors="zokradonh <az@zok.xyz>" \
     org.opencontainers.image.title="ARK Survival Evolved Dedicated Server" \
@@ -10,21 +10,22 @@ LABEL org.opencontainers.image.authors="zokradonh <az@zok.xyz>" \
 
 # install prerequisites
 RUN <<EOT
+    echo steam steam/question select "I AGREE" | debconf-set-selections
+    echo steam steam/license note '' | debconf-set-selections
     add-apt-repository multiverse
-    apt-get update
-    apt-get install -y software-properties-common
     dpkg --add-architecture i386
     apt-get update
-    apt-get install -y --no-install-recommends \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
         perl-modules \
         curl \
         lsof \
         libc6-i386 \
-        lib32gcc1 \
+        lib32gcc-s1 \
         bzip2 \
         python3 \
         steamcmd
     rm -rf /var/lib/apt/lists/*
+    ln -sf /usr/games/steamcmd /usr/bin/steamcmd
 EOT
 
 # create steam user
@@ -36,11 +37,12 @@ RUN <<EOT
 EOT
 
 # install arkmanager
-RUN curl -sL -o https://git.io/arkmanager | bash -s steam
+RUN curl -sL https://git.io/arkmanager | bash -s steam
 
 # install startup script
 COPY --chmod=777 startup.sh /etc/rc.local
-COPY ark_env.py /scripts
+COPY scripts/* /scripts/
+COPY arkmanager-docker.cfg /etc/arkmanager/
 
 # use phusion's init system
 CMD ["/sbin/my_init"]

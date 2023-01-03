@@ -3,6 +3,10 @@ x-common: &common
   restart: always
   image: hello-world
 
+x-common-volumes: &common-volumes
+  gamefiles:
+  backups:
+
 x-common-env: &common-env
   SOME_ENV: "yes"
 
@@ -25,9 +29,10 @@ services:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
-      MODS: "123456789,987654321"
-
+      ARK_GameModIds: "123456789,987654321"
       <<: *common-env
+    volumes:
+      <<: *common-volumes
 
   &instance valguero:
     x-steamport: &steamport "27002:27002/udp"
@@ -40,9 +45,13 @@ services:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
+      ARK_GameModIds: "123456789,987654321"
       <<: *common-env
+    volumes:
+      <<: *common-volumes
   
 
 volumes:
   gamefiles:
   island:
+  backups:
