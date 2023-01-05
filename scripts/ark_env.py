@@ -9,7 +9,10 @@ name_regex = re.compile(r"^ARK(?P<type>[A-Z]*)_(?P<option>[a-zA-Z0-9_]+)$")
 # 27000:27000/udp
 port_regex = re.compile(r"(\d+):(\d+)(/((udp)|(tcp)))?$")
 
-cfg = ""
+cfg = '''
+arkserverroot="/ark"                                     # path of your ARK server files (default ~/ARK)
+arkautorestartfile=ShooterGame/Saved/.autostart
+'''[1:-1]
 
 # transform environment variable `ARKFLAG_ServerAdminPassword` with contents `swordfish`
 # to string `arkflag_ServerAdminPassword="swordfish"`
@@ -35,9 +38,16 @@ def parse_port(env_name: str) -> int:
     return int(m.group(2))
 
 steamport = parse_port("STEAMPORT")
-cfg += f'ark_QueryPort={steamport}\n'
+cfg += f'ark_QueryPort="{steamport}"\n'
 
 gameport = parse_port("GAMEPORT")
-cfg += f'ark_Port={gameport}\n'
+cfg += f'ark_Port="{gameport}"\n'
+
+mapname = os.environ.get("MAP")
+if mapname is None:
+    print(f"Please specify environment variable 'MAP'")
+    exit(1)
+
+cfg += f'serverMap="{mapname}"\n'
 
 print(cfg)

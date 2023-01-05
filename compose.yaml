@@ -1,45 +1,55 @@
 
 x-common: &common
-  restart: always
-  image: hello-world
+  restart: unless-stopped
+  image: arkimage
 
-x-common-volumes: &common-volumes
-  gamefiles:
-  backups:
+x-clusters:
+  - &nhcluster "newhorizon"
 
 x-common-env: &common-env
   SOME_ENV: "yes"
-
-x-common-pw:
-  
+  ARK_ServerPassword: "blub"
+  ARKOPT_activeevent: "Summer"
+  ARK_MaxPlayers: 60
 
 services:
   webapi:
     image: hello-world
+
+  updater:
+    <<: *common
+    restart: "no"
+    command: update
+
 
   &instance island:
     x-steamport: &steamport "27000:27000/udp"
     x-gameport: &gameport "17000:17000/udp"
     <<: *common
     ports: 
-    - *steamport
-    - *gameport
+      - *steamport
+      - *gameport
     <<: *common
     environment:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
+      MAP: "TheIsland"
       ARK_GameModIds: "123456789,987654321"
+      ARK_SessionName: "Zok's Generation IV - The Island"
+      ARKOPT_clusterid: *nhcluster
       <<: *common-env
     volumes:
-      <<: *common-volumes
+      - "island:/ark/server/ShooterGame/Saved"
+      - "gamefiles:/ark"
+      - "backups:/arkbackups"
 
   &instance valguero:
     x-steamport: &steamport "27002:27002/udp"
     x-gameport: &gameport "17002:17002/udp"
     ports: 
-    - *steamport
-    - *gameport
+      - *steamport
+      - *gameport
     <<: *common
     environment:
       STEAMPORT: *steamport
@@ -47,11 +57,11 @@ services:
       INSTANCE_NAME: *instance
       ARK_GameModIds: "123456789,987654321"
       <<: *common-env
-    volumes:
-      <<: *common-volumes
+    #volumes:
+    #  <<: *common-volumes
   
 
 volumes:
   gamefiles:
-  island:
   backups:
+  island:
