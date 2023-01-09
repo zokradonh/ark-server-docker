@@ -40,11 +40,11 @@ EOT
 RUN curl -sL https://git.io/arkmanager | bash -s steam
 
 # install startup script
-COPY --chmod=777 startup.sh /etc/rc.local
-COPY --chmod=777 scripts/* /scripts/
-COPY arkmanager-docker.cfg /etc/arkmanager/
-
+COPY --chmod=777 /scripts/startup.sh /etc/rc.local
 COPY --chmod=777 /scripts/update.sh /usr/bin/update
+
+COPY scripts/ /scripts/
+COPY arkmanager-changeset.cfg /etc/arkmanager/
 
 # use phusion's init system
 CMD ["/sbin/my_init"]
