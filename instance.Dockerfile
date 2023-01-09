@@ -39,6 +39,10 @@ EOT
 # install arkmanager
 RUN curl -sL https://git.io/arkmanager | bash -s steam
 
+# Omni Config Changer settings
+ENV OC_SCHEME=bashlike \
+    OC_FILE=/etc/arkmanager/arkmanager.cfg
+
 # install startup script
 COPY --chmod=777 /scripts/startup.sh /etc/rc.local
 COPY --chmod=777 /scripts/update.sh /usr/bin/update

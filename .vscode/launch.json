@@ -2,6 +2,7 @@
     // Use IntelliSense to learn about possible attributes.
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    //python3 /scripts/config_edit.py -f /etc/arkmanager/arkmanager.cfg -c /etc/arkmanager/arkmanager-changeset.cfg
     "version": "0.2.0",
     "configurations": [
         {
@@ -9,6 +10,15 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: Config Edit",
+            "type": "python",
+            "request": "launch",
+            "program": "scripts/config_edit.py",
+            "args": ["-f","arkmanager-original.cfg","-c","arkmanager-changeset.cfg"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

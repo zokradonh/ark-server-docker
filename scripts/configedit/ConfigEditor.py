@@ -1,4 +1,5 @@
 
+import os
 import re
 from pathlib import Path
 import urllib.parse
@@ -8,7 +9,11 @@ from .Schemes import *
 class Location:
     def __init__(self):
         self.folder = Path(".")
+        self.scheme_def = None
         self.scheme_def : Scheme
+        self.in_file_path = None
+        self.file = None
+        self.scheme = None
 
     def set_file(self, path: Path):
         self.file = path
@@ -80,10 +85,12 @@ class Uncomment(Operation):
 class ConfigEditor:
 
     def __init__(self):
-        pass
+        self.debug = 0
 
     def parse_env(self) -> list[Operation]:
         parser = EnvParser()
+        if self.debug:
+            print(f"{len(parser.operations)} config changes by environment variables.")
         return parser.operations
 
     def parse_changeset_file(self, file: Path, scheme: str, target_file: Path):
@@ -104,8 +111,30 @@ class ConfigEditor:
             for m in scheme_cls.key_search_pattern.finditer(content):
                 o = EditOrAdd(l, m.group('key'), m.group('value'))
                 operations.append(o)
+        if self.debug:
+            print(f"{len(operations)} config changes by changeset file '{file}'.")
+        return operations
 
-            return operations
+    def manual_set(self, scheme: str, target_file: Path, key: str, value: str,):
+        l = Location()
+        l.set_file(Path(target_file))
+        l.set_scheme(scheme)
+        o = Operation(l, key, value)
+        if self.debug:
+            print(f"1 config change set manually.")
+        return [o]
+
+    def manual_setn(self, scheme: str, target_file: str, changeset: dict[str, str]):
+        l = Location()
+        l.set_file(Path(target_file))
+        l.set_scheme(scheme)
+        operations = []
+        for key, value in changeset.items():
+            o = Operation(l, key, value)
+            operations.append(o)
+        if self.debug:
+            print(f"{len(operations)} config changes set manually.")
+        return operations
 
     def change_config(self, operations: list[Operation]):
         schemes = Scheme.subclasses
@@ -119,7 +148,7 @@ class ConfigEditor:
                     o.location.scheme_def = scheme
             if o.location.file:
                 for file in files:
-                    if file.path == o.location.file:
+                    if str(file.path) == str(o.location.file):
                         file.operations.append(o)
                         break
                 else:
@@ -129,6 +158,8 @@ class ConfigEditor:
             def replace(m: re.Match):
                 for o in file.operations:
                     if o.key == m.group('key'):
+                        if self.debug:
+                            print(f"Changing config {m.group('key')}.")
                         return o.apply(m)
                 return m.group(0) # return original string, no change
 
@@ -160,6 +191,7 @@ ocl_regex = re.compile(r'^OCL_(?P<key>[A-Za-z0-9_]+)$')
 class EnvParser:
     def __init__(self):
         self.base_location = Location()
+        self.folder = None
 
         # first read and set settings
         for name, value in os.environ.items():

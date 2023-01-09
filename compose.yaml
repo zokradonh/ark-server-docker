@@ -21,6 +21,18 @@ services:
     restart: "no"
     command: update
 
+  &instance test:
+    image: arkimage
+    build:
+      dockerfile: instance.Dockerfile
+    environment:
+      INSTANCE_NAME: *instance
+      OCC_ark_GameModIds: "123456789,987654321"
+      OCC_ark_SessionName: "Zok's Generation IV - The Island"
+      OCC_arkopt_clusterid: *nhcluster
+      OCL_config_1: occ+bashlike:/etc/arkmanager/arkmanager.cfg?k=arkMaxBackupSizeMB&v=800
+      OCL_config_2: occ+bashlike:/etc/arkmanager/arkmanager.cfg?k=arkprecisewarn&c
+      
 
   &instance island:
     x-steamport: &steamport "27000:27000/udp"
