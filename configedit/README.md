@@ -49,27 +49,39 @@ Make sure that there are no matching files in folder that should not be changed.
 ## Long syntax
 
 Variables with `OCL_<SOME-random-STRING>` define the long syntax. The config change is represented by a valid URL.
-This will edit or add a config in the specified file:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&v=<new-value>`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>`
 
-This will comment out the specified configuration:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&c`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&comment`
+Both will edit or add a config in the specified file:
+```
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&v=<new-value>
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>
+```
 
-This will uncomment the specified configuration:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&u`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&uncomment`
+Both will comment out the specified configuration:
 
-This will remove the specified configuration line:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&r`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&remove`
+```
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&c
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&comment
+```
+
+Both will uncomment the specified configuration:
+
+```
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&u
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&uncomment
+```
+
+Both will remove the specified configuration line:
+
+```
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&r
+occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&remove
+```
 
 It is also possible to use `key` instead of `k` in the query string.
-It is also possible to combine `value` and `uncomment`:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>&uncomment`
+It is also possible to combine `value` and `comment`:
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>&comment`
 
-Specifiying a new value will not automatically uncomment a line.
+Specifiying a new value will automatically uncomment a line!
 Uncommenting a line will remove all prepending comment symbols if it has multiple. Multi line comments are not supported.
 
 # Implemented Schemes
