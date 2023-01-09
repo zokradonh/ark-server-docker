@@ -24,13 +24,13 @@ OCC_SSHD_CONFIG__PubkeyAuthentication=-#
 
 This will do the same:
 ```
-OCC__SoMeRAnDoMNaMe1=occ:/etc/ssh/sshd_config?k=Port&v=2222
-OCC__SoMeRAnDoMNaMe2=occ:/etc/ssh/sshd_config?k=PubkeyAuthentication&u
+OCL_SoMeRAnDoMNaMe1=occ+sshlike:/etc/ssh/sshd_config?k=Port&v=2222
+OCL_SoMeRAnDoMNaMe2=occ+sshlike:/etc/ssh/sshd_config?k=PubkeyAuthentication&u
 ```
 
 Example for SubPath handling:
 ```
-OCC__SoMeRAnDoMNaMe3=occ:/etc/ssh/sshd_config?k=Match%20User%20fred/X11Forwarding&u
+OCL_SoMeRAnDoMNaMe3=occ+sshlike:/etc/ssh/sshd_config?k=Match%20User%20fred/X11Forwarding&u
 ```
 
 # Prefixes
@@ -48,26 +48,26 @@ Make sure that there are no matching files in folder that should not be changed.
 
 ## Long syntax
 
-Variables with `OCC__<SOME-random-STRING>` define the long syntax. The config change is represented by a valid URL.
+Variables with `OCL_<SOME-random-STRING>` define the long syntax. The config change is represented by a valid URL.
 This will edit or add a config in the specified file:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&v=<new-value>`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&value=<new-value>`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&v=<new-value>`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>`
 
 This will comment out the specified configuration:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&c`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&comment`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&c`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&comment`
 
 This will uncomment the specified configuration:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&u`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&uncomment`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&u`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&uncomment`
 
 This will remove the specified configuration line:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&r`
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&remove`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&r`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&remove`
 
 It is also possible to use `key` instead of `k` in the query string.
 It is also possible to combine `value` and `uncomment`:
-`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<file-name-with-extension>&value=<new-value>&uncomment`
+`occ+<scheme>:<abs-path-config-file>?k=<sub-path>/<config-key>&value=<new-value>&uncomment`
 
 Specifiying a new value will not automatically uncomment a line.
 Uncommenting a line will remove all prepending comment symbols if it has multiple. Multi line comments are not supported.
@@ -78,4 +78,5 @@ Uncommenting a line will remove all prepending comment symbols if it has multipl
 - [ ] sshlike
 - [ ] json
 - [ ] yaml
+- [ ] php define
 - ?
