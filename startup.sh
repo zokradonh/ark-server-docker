@@ -2,9 +2,11 @@
 
 set -e
 
-if [ -z "$INSTANCE_NAME" ] then
+if [ -z "$INSTANCE_NAME" ]
+then
     echo "Please specify environment variable 'INSTANCE_NAME'"
     exit 1
+fi
 
 rm /etc/arkmanager/instances/*
 
@@ -12,4 +14,6 @@ python3 /scripts/config_edit.py -f /etc/arkmanager/arkmanager.cfg -c /etc/arkman
 
 python3 /scripts/ark_env.py > /etc/arkmanager/instance.cfg
 
-exec arkmanager start @${INSTANCE_NAME}
+#exec arkmanager start @${INSTANCE_NAME}
+
+cat /etc/arkmanager/arkmanager.cfg
