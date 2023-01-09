@@ -18,9 +18,18 @@
             "type": "python",
             "request": "launch",
             "program": "scripts/config_edit.py",
-            "args": ["-f","arkmanager-original.cfg","-c","arkmanager-changeset.cfg"],
+            "args": ["-f","test/arkmanager-original.cfg","-o","arkmanager-new.cfg","-c","arkmanager-changeset.cfg"],
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": true,
+            "env": {
+                "OCC_ark_GameModIds": "123456789,987654321",
+                "OCC_ark_SessionName": "Zok's Generation IV - The Island",
+                "OCC_arkopt_clusterid": "nhcluster",
+                "OCL_config_1": "occ+bashlike:${cwd}/test/arkmanager-original.cfg?k=arkMaxBackupSizeMB&v=800",
+                "OCL_config_2": "occ+bashlike:${cwd}/test/arkmanager-original.cfg?k=arkprecisewarn&c",
+                "OC_SCHEME": "bashlike",
+                "OC_FILE": "${cwd}/test/arkmanager-original.cfg"
+            }
         }
     ]
 }

@@ -48,7 +48,12 @@ class Edit(Operation):
         return self.location.scheme_def.create_config_line(self.key, self.value)
 
 class EditOrAdd(Operation):
+    def __init__(self, location: Location, key: str, value: str):
+        super().__init__(location, key, value)
+        self.applied = False
+
     def apply(self, m: re.Match):
+        self.applied = True
         return self.location.scheme_def.create_config_line(self.key, self.value)
 
 class Add(Operation):
@@ -86,6 +91,7 @@ class ConfigEditor:
 
     def __init__(self):
         self.debug = 0
+        self.output_file = None
 
     def parse_env(self) -> list[Operation]:
         parser = EnvParser()
@@ -119,7 +125,7 @@ class ConfigEditor:
         l = Location()
         l.set_file(Path(target_file))
         l.set_scheme(scheme)
-        o = Operation(l, key, value)
+        o = EditOrAdd(l, key, value)
         if self.debug:
             print(f"1 config change set manually.")
         return [o]
@@ -130,7 +136,7 @@ class ConfigEditor:
         l.set_scheme(scheme)
         operations = []
         for key, value in changeset.items():
-            o = Operation(l, key, value)
+            o = EditOrAdd(l, key, value)
             operations.append(o)
         if self.debug:
             print(f"{len(operations)} config changes set manually.")
@@ -148,7 +154,7 @@ class ConfigEditor:
                     o.location.scheme_def = scheme
             if o.location.file:
                 for file in files:
-                    if str(file.path) == str(o.location.file):
+                    if str(file.path.resolve()) == str(o.location.file.resolve()):
                         file.operations.append(o)
                         break
                 else:
@@ -166,9 +172,21 @@ class ConfigEditor:
             with open(file.path) as f:
                 content = f.read()
                 (changed, num_changes) = file.operations[0].location.scheme_def.key_search_pattern.subn(replace, content)
-            with open(file.path, "w") as f:
+
+                addOps = [f for f in file.operations if (isinstance(f,EditOrAdd) and not f.applied) or isinstance(f, Add)]
+                if len(addOps) > 0:
+                    changed += "\n"
+                for o in addOps:
+                    changed += o.location.scheme_def.create_config_line(o.key, o.value) + "\n"
+                    print(f"Added config {o.key}.")
+
+            output_file = self.output_file
+            if output_file == None:
+                output_file = file.path
+
+            with open(output_file, "w") as f:
                 f.write(changed)
-            print(f"Changed configs in file '{file.path}': {num_changes}")
+            print(f"Changed configs in file '{file.path.resolve()}': {num_changes}")
 
 class ConfigFile:
     path = Path(".")
@@ -228,15 +246,19 @@ class EnvParser:
                         raise OccEnvError("Please provide scheme information by 'OC_SCHEME' (e.g. OC_SCHEME=bashlike) or provide scheme in long syntax url (e.g. 'occ+bashlike:/file/path').")
                 filename = components.path
                 l = Location()
-                l.set_file(filename)
+                l.set_file(Path(filename))
                 l.scheme = cscheme
 
                 qsparts = urllib.parse.parse_qs(components.query, keep_blank_values=True)
                 key = qsparts.get('k') or qsparts.get('key')
+                if key == None or len(key) == 0:
+                    raise OccEnvError(f"Please provide key. OCC url has no key variable: {value}")
+                key = key[0]
 
                 # TODO: parse key for any in_file_path information
 
                 if newvalue := qsparts.get('v') or qsparts.get('value'):
+                    newvalue = newvalue[0]
                     o = EditOrAdd(l, key, newvalue)
                     self.operations.append(o)
                 if comment := qsparts.get('c') or qsparts.get('comment'):

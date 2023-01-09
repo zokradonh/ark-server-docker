@@ -37,7 +37,7 @@ class Scheme():
 class BashLike(Scheme):
     name = "bashlike"
 
-    key_search_pattern = re.compile(r'^(?P<prefix>(?:[^\S\r\n]*#*)*)(?P<key>[a-zA-Z0-9_-]+)\s*=\s*"?(?P<value>[^"]+)"?', re.MULTILINE)
+    key_search_pattern = re.compile(r'^(?P<prefix>(?:[^\S\r\n]*#*)*)(?P<key>[a-zA-Z0-9_-]+)\s*=\s*("?)(?P<value>[^"\n\r]+)\3', re.MULTILINE)
 
     comment_symbol = "#"
 
