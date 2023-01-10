@@ -172,6 +172,10 @@ class ConfigEditor:
                         return o.apply(m)
                 return m.group(0) # return original string, no change
 
+            if not file.path.exists:
+                with open(file.path, "x"):
+                    pass
+
             with open(file.path) as f:
                 content = f.read()
                 changed = file.operations[0].location.scheme_def.key_search_pattern.sub(replace, content)
