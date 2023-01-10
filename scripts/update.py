@@ -1,22 +1,29 @@
+#!/usr/bin/env python3
+
 import subprocess
-
 import sys
+import os
+from pathlib import Path
 
-def run(command: list[str]):
-    process = subprocess.Popen(command, stdout=sys.stdout, stderr=sys.stderr)
+def runf(command: str):
+    result = run(command)
+    if result != 0:
+        exit(result)
+    return result
+
+def run(command: str):
+    process = subprocess.Popen(args=command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
     process.wait()
     return process.returncode
 
-run(["arkmanager","--help"])
+if os.environ.get('UTILITY') != "update":
+    exit(0) # don't update, skip this init script
 
-#print(len(sys.argv))
+runf("chown -R steam:steam /ark")
 
-# if [ ! -d /ark/server/ShooterGame  ] || [ ! -f /ark/server/version.txt ]; then
-#     echo "No game files found. Installing..."
-#     chown -R steam:steam /ark
-#     arkmanager install
-#     arkmanager installmods
-# else
-#     arkmanager installmods
-#     arkmanager update --update-mods
-# fi
+if Path("/ark/server/ShooterGame").exists() and Path("/ark/server/version.txt").exists():
+    runf("arkmanager installmods")
+    runf("arkmanager update --update-mods")
+else:
+    runf("arkmanager install")
+    runf("arkmanager installmods")

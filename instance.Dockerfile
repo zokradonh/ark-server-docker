@@ -23,6 +23,7 @@ RUN <<EOT
         lib32gcc-s1 \
         bzip2 \
         python3 \
+        python3-pip \
         steamcmd
     rm -rf /var/lib/apt/lists/*
     ln -sf /usr/games/steamcmd /usr/bin/steamcmd
@@ -39,16 +40,20 @@ EOT
 # install arkmanager
 RUN curl -sL https://git.io/arkmanager | bash -s steam
 
+# install Zok's Omni Config Changer
+COPY omni-config-changer /usr/local/lib/occ
+RUN pip install /usr/local/lib/occ
+
 # Omni Config Changer settings
 ENV OC_SCHEME=bashlike \
     OC_FILE=/etc/arkmanager/instance.cfg \
     OC_FOLDER=/etc/arkmanager/
 
 # install startup script
-COPY --chmod=777 /scripts/startup.sh /etc/rc.local
-COPY --chmod=777 /scripts/update.sh /usr/bin/update
+COPY --chmod=777 /scripts/startup.py /etc/my_init.d/12-setup-config.py
+COPY --chmod=777 /scripts/update.py /etc/my_init.d/15-update-server.py
+COPY --chmod=777 /scripts/run.py /etc/my_init.d/20-run-instance.py
 
-COPY scripts/ /scripts/
 COPY arkmanager-changeset.cfg /etc/arkmanager/
 
 # use phusion's init system

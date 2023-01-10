@@ -19,13 +19,18 @@ services:
   updater:
     <<: *common
     restart: "no"
-    command: update
+    environment:
+      UTILITY: "update"
 
   &instance test:
+    x-steamport: &steamport "27000:27000/udp"
+    x-gameport: &gameport "17000:17000/udp"
     image: arkimage
     build:
       dockerfile: instance.Dockerfile
     environment:
+      STEAMPORT: *steamport
+      GAMEPORT: *gameport
       INSTANCE_NAME: *instance
       OCC_ark_GameModIds: "123456789,987654321"
       OCC_ark_SessionName: "Zok's Generation IV - The Island"
@@ -46,10 +51,9 @@ services:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
-      MAP: "TheIsland"
-      ARK_GameModIds: "123456789,987654321"
-      ARK_SessionName: "Zok's Generation IV - The Island"
-      ARKOPT_clusterid: *nhcluster
+      OCC_ARK_GameModIds: "123456789,987654321"
+      OCC_ARK_SessionName: "Zok's Generation IV - The Island"
+      OCC_ARKOPT_clusterid: *nhcluster
       <<: *common-env
     volumes:
       - "island:/ark/server/ShooterGame/Saved"
