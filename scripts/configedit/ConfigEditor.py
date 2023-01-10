@@ -91,7 +91,7 @@ class ConfigEditor:
 
     def __init__(self):
         self.debug = 0
-        self.output_file = None
+        self.output_file_suffix = None # TODO: this makes no sense, there are multiple possible input files
 
     def parse_env(self) -> list[Operation]:
         parser = EnvParser()
@@ -161,9 +161,12 @@ class ConfigEditor:
                     files.append(ConfigFile(o.location.file, o))
 
         for file in files:
+            num_changes = 0
             def replace(m: re.Match):
+                nonlocal num_changes, file
                 for o in file.operations:
                     if o.key == m.group('key'):
+                        num_changes += 1
                         if self.debug:
                             print(f"Changing config {m.group('key')}.")
                         return o.apply(m)
@@ -171,49 +174,46 @@ class ConfigEditor:
 
             with open(file.path) as f:
                 content = f.read()
-                (changed, num_changes) = file.operations[0].location.scheme_def.key_search_pattern.subn(replace, content)
+                changed = file.operations[0].location.scheme_def.key_search_pattern.sub(replace, content)
 
                 addOps = [f for f in file.operations if (isinstance(f,EditOrAdd) and not f.applied) or isinstance(f, Add)]
                 if len(addOps) > 0:
                     changed += "\n"
                 for o in addOps:
                     changed += o.location.scheme_def.create_config_line(o.key, o.value) + "\n"
+                    num_changes += 1
                     print(f"Added config {o.key}.")
 
-            output_file = self.output_file
-            if output_file == None:
-                output_file = file.path
+            output_file = file.path
+            if self.output_file_suffix:
+                output_file = output_file.with_suffix(self.output_file_suffix)
 
             with open(output_file, "w") as f:
                 f.write(changed)
             print(f"Changed configs in file '{file.path.resolve()}': {num_changes}")
 
 class ConfigFile:
-    path = Path(".")
-    operations = []
-    operations : list[Operation]
-    scheme : type[Scheme]
-
     def __init__(self, path: Path, operation: Operation):
         self.path = path
+        self.operations = []
+        self.operations : list[Operation]
         self.operations.append(operation)
+        self.scheme : type[Scheme]
 
-
-
-
-
-oc_regex = re.compile(r'^OC_(?P<setting>[A-Z0-9_]+)$')
-occ_regex = re.compile(r'^OCC_((?P<filename>[A-Z0-9][A-Z0-9_]+)__)?(?P<key>[A-Za-z0-9_]+)$')
-ocl_regex = re.compile(r'^OCL_(?P<key>[A-Za-z0-9_]+)$')
 
 class EnvParser:
+
+    oc_regex = re.compile(r'^OC_(?P<setting>[A-Z0-9_]+)$')
+    occ_regex = re.compile(r'^OCC_((?P<filename>[A-Z0-9][A-Z0-9_]+)__)?(?P<key>[A-Za-z0-9_]+)$')
+    ocl_regex = re.compile(r'^OCL_(?P<key>[A-Za-z0-9_]+)$')
+
     def __init__(self):
         self.base_location = Location()
         self.folder = None
 
         # first read and set settings
         for name, value in os.environ.items():
-            if m := oc_regex.search(name):
+            if m := self.oc_regex.search(name):
                 self.set_setting(m.group('setting'), value)
                 continue
 
@@ -221,7 +221,7 @@ class EnvParser:
         self.operations : list[Operation]
 
         for name, value in os.environ.items():
-            if m := occ_regex.search(name):
+            if m := self.occ_regex.search(name):
                 l = self.base_location.copy()
                 if m.group('filename'):
                     l.set_file(Path(m.group('filename')))
@@ -229,11 +229,14 @@ class EnvParser:
                     raise OccEnvError("Please provide file information by 'OC_FOLDER' or 'OC_FILE'. If you provided 'OC_FOLDER' then also specify file in 'OCC_<filename>__<key>=<value>'.")
                 if not l.scheme:
                     raise OccEnvError("Please provide scheme information by 'OC_SCHEME' (e.g. OC_SCHEME=bashlike).")
+
+                # TODO: check for comment/uncomment -#/+# syntax
+
                 o = EditOrAdd(l, m.group('key'), value)
                 self.operations.append(o)
                 continue
             
-            if m := ocl_regex.search(name):
+            if m := self.ocl_regex.search(name):
                 components = urllib.parse.urlparse(value)
                 if not components.scheme.startswith("occ"):
                     continue
@@ -253,9 +256,11 @@ class EnvParser:
                 key = qsparts.get('k') or qsparts.get('key')
                 if key == None or len(key) == 0:
                     raise OccEnvError(f"Please provide key. OCC url has no key variable: {value}")
-                key = key[0]
+                key = key[0] # url parse_qs supports multiple variables with same name
 
                 # TODO: parse key for any in_file_path information
+                # TODO: support non-unique url query string variables to allow edit of multiple keys in a single env var.
+                # TODO: support syntax for Add() operation
 
                 if newvalue := qsparts.get('v') or qsparts.get('value'):
                     newvalue = newvalue[0]
@@ -270,7 +275,6 @@ class EnvParser:
                 if remove := qsparts.get('r') or qsparts.get('remove'):
                     o = Remove(l, key)
                     self.operations.append(o)
-
 
     def set_setting(self, setting_name: str, setting_value: str):
         if setting_name == "FOLDER":

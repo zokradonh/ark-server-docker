@@ -11,9 +11,7 @@ from pathlib import Path
 parser = argparse.ArgumentParser("Config Editor")
 parser.add_argument("-f","--file")
 parser.add_argument("-c","--changes")
-parser.add_argument("-o","--outfile", required=False)
 parser.add_argument("-s","--set", required=False, nargs="*")
-
 
 args = parser.parse_args()
 
@@ -27,10 +25,11 @@ changeset_file = args.changes
 cfg_regex = re.compile(r'^[^\S\r\n]*(?P<key>[a-zA-Z0-9_-]+)\s*=\s*"?(?P<value>[^"]+)"?', re.MULTILINE)
 
 editor = ConfigEditor()
-editor.debug = 1
 
-if args.outfile:
-    editor.output_file = args.outfile
+# debug
+editor.debug = 1
+# debug
+#editor.output_file_suffix = ".new.cfg"
 
 # parse changes from changeset file
 changes = editor.parse_changeset_file(Path(changeset_file), "bashlike", Path(config_file))
@@ -46,7 +45,7 @@ if args.set != None:
         cmdline_changes[m.group('key')] = m.group('value')
 changes += editor.manual_setn("bashlike", Path(config_file), cmdline_changes)
 
-# parse change from environment
+# parse changes from environment
 changes += editor.parse_env()
 
 # change configuration file
