@@ -162,6 +162,8 @@ class ConfigEditor:
 
         for file in files:
             num_changes = 0
+            changed = ""
+
             def replace(m: re.Match):
                 nonlocal num_changes, file
                 for o in file.operations:
@@ -172,26 +174,27 @@ class ConfigEditor:
                         return o.apply(m)
                 return m.group(0) # return original string, no change
 
-            if not file.path.exists:
-                with open(file.path, "x"):
-                    pass
+            # edit/comment/uncomment/remove existing config if file exists
+            if file.path.exists:
+                with open(file.path) as f:
+                    content = f.read()
+                    changed += file.operations[0].location.scheme_def.key_search_pattern.sub(replace, content)
 
-            with open(file.path) as f:
-                content = f.read()
-                changed = file.operations[0].location.scheme_def.key_search_pattern.sub(replace, content)
+            # add new configs
+            addOps = [o for o in file.operations if (isinstance(o,EditOrAdd) and not o.applied) or isinstance(o, Add)]
+            if len(addOps) > 0:
+                changed += "\n"
+            for o in addOps:
+                changed += o.location.scheme_def.create_config_line(o.key, o.value) + "\n"
+                num_changes += 1
+                print(f"Added config {o.key}.")
 
-                addOps = [f for f in file.operations if (isinstance(f,EditOrAdd) and not f.applied) or isinstance(f, Add)]
-                if len(addOps) > 0:
-                    changed += "\n"
-                for o in addOps:
-                    changed += o.location.scheme_def.create_config_line(o.key, o.value) + "\n"
-                    num_changes += 1
-                    print(f"Added config {o.key}.")
-
+            # set output filename
             output_file = file.path
             if self.output_file_suffix:
                 output_file = output_file.with_suffix(self.output_file_suffix)
 
+            # write to output file
             with open(output_file, "w") as f:
                 f.write(changed)
             print(f"Changed configs in file '{file.path.resolve()}': {num_changes}")
