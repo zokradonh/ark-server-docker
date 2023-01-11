@@ -2,7 +2,8 @@
 
 import re
 import os
-
+import subprocess
+import sys
 import argparse
 
 from occ.ConfigEditor import ConfigEditor
@@ -32,9 +33,16 @@ def parse_port(env_name: str) -> int:
         exit(1)
     return int(m.group(2))
 
-def exit_on_nonzero(result: int):
+def runf(command: str):
+    result = run(command)
     if result != 0:
         exit(result)
+    return result
+
+def run(command: str):
+    process = subprocess.Popen(args=command, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+    process.wait()
+    return process.returncode
 
 parser = argparse.ArgumentParser("Config Editor")
 
@@ -45,7 +53,7 @@ arkmanager_instance_config = arkmanager_config_folder / "instance.cfg"
 args = parser.parse_args()
 
 # delete all instance config files
-exit_on_nonzero(os.system("rm /etc/arkmanager/instances/*"))
+runf("rm /etc/arkmanager/instances/*")
 
 editor = ConfigEditor()
 
@@ -81,3 +89,23 @@ changes += editor.parse_env()
 
 # change configuration file
 editor.change_config(changes)
+
+if os.environ.get('UTILITY') == "update":
+    runf("chown -R steam:steam /ark")
+
+    if Path("/ark/server/ShooterGame").exists() and Path("/ark/server/version.txt").exists():
+        runf("arkmanager installmods")
+        os.execlp("arkmanager", "arkmanager", "update","--update-mods")
+    else:
+        runf("arkmanager install --verbose")
+        os.execlp("arkmanager", "arkmanager", "installmods")
+elif os.environ.get('UTILITY', "no") != "no":
+    # check if game is installed and fail if not
+    if not Path("/ark/server/version.txt").exists():
+        print("ARK Survival Evolved server files are not installed. Please run this container with 'update' command.")
+        exit(1)
+
+    instance_name = os.environ.get('INSTANCE_NAME')
+
+    # start game server and replace python process
+    os.execlp("arkmanager", "arkmanager", "run", instance_name)

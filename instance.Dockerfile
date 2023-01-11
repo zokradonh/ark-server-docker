@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.4
 
-FROM phusion/baseimage:jammy-1.0.1
+FROM ubuntu:jammy
 
 LABEL org.opencontainers.image.authors="zokradonh <az@zok.xyz>" \
     org.opencontainers.image.title="ARK Survival Evolved Dedicated Server" \
@@ -22,6 +22,7 @@ RUN <<EOT
         libc6-i386 \
         lib32gcc-s1 \
         bzip2 \
+        tini \
         python3 \
         python3-pip \
         steamcmd
@@ -48,13 +49,11 @@ RUN pip install /usr/local/lib/occ
 ENV OC_SCHEME=bashlike \
     OC_FILE=/etc/arkmanager/instance.cfg \
     OC_FOLDER=/etc/arkmanager/
-
-# install startup script
-COPY --chmod=777 /scripts/startup.py /etc/my_init.d/12-setup-config.py
-COPY --chmod=777 /scripts/update.py /etc/my_init.d/15-update-server.py
-COPY --chmod=777 /scripts/run.py /etc/my_init.d/20-run-instance.py
-
 COPY arkmanager-changeset.cfg /etc/arkmanager/
 
-# use phusion's init system
-CMD ["/sbin/my_init"]
+# install startup script
+COPY --chmod=777 /scripts/startup.py /startup.py
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+CMD ["/startup.py"]
