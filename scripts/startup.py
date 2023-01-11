@@ -9,11 +9,15 @@ from occ.ConfigEditor import ConfigEditor
 
 from pathlib import Path
 
-if os.environ.get('INSTANCE_NAME') == None:
+instance_name = os.environ.get('INSTANCE_NAME')
+utility = os.environ.get('UTILITY')
+
+if utility:
+    instance_name = "main"
+
+if instance_name == None:
     print("Please specify environment variable 'INSTANCE_NAME'")
     exit(1)
-
-instance_name = os.environ.get('INSTANCE_NAME')
 
 # ex 27000:27000/udp
 port_regex = re.compile(r"(\d+):(\d+)(/((udp)|(tcp)))?$")
@@ -53,16 +57,20 @@ editor.debug = 1
 # parse changes from changeset file
 changes = editor.parse_changeset_file(arkmanager_config_folder / "arkmanager-changeset.cfg", "bashlike", arkmanager_config)
 
+# set basic instance configuration
 changes += editor.manual_setn("bashlike", arkmanager_config, {
     "defaultinstance": instance_name,
     f"configfile_{instance_name}": str(arkmanager_instance_config),
 })
 
-steamport = parse_port("STEAMPORT")
-gameport = parse_port("GAMEPORT")
+if utility:
+    steamport = 27000
+    gameport = 17000
+else:
+    steamport = parse_port("STEAMPORT")
+    gameport = parse_port("GAMEPORT")
 
 changes += editor.manual_setn("bashlike", arkmanager_instance_config, {
-    "arkserverroot": "/ark/server",
     f"configfile_{instance_name}": str(arkmanager_instance_config),
     "ark_QueryPort": steamport,
     "ark_Port": gameport

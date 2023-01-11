@@ -26,5 +26,5 @@ def run(command: str):
     process.wait()
     return process.returncode
 
-# start game server
-runf(f"arkmanager start @{instance_name}")
+# start game server and replace python process
+os.execl("arkmanager","run",instance_name)

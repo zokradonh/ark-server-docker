@@ -1,16 +1,17 @@
 
 x-common: &common
-  restart: unless-stopped
-  image: arkimage
+  restart: "no"
+  image: zokradonh/ark-server-docker
+  build:
+    dockerfile: instance.Dockerfile
 
 x-clusters:
   - &nhcluster "newhorizon"
 
 x-common-env: &common-env
-  SOME_ENV: "yes"
-  ARK_ServerPassword: "blub"
-  ARKOPT_activeevent: "Summer"
-  ARK_MaxPlayers: 60
+  OCC_ark_ServerPassword: "asdf"
+  OCC_arkopt_activeevent: "Summer"
+  OCC_ark_MaxPlayers: 60
 
 services:
   webapi:
@@ -21,23 +22,9 @@ services:
     restart: "no"
     environment:
       UTILITY: "update"
-
-  &instance test:
-    x-steamport: &steamport "27000:27000/udp"
-    x-gameport: &gameport "17000:17000/udp"
-    image: arkimage
-    build:
-      dockerfile: instance.Dockerfile
-    environment:
-      STEAMPORT: *steamport
-      GAMEPORT: *gameport
-      INSTANCE_NAME: *instance
-      OCC_ark_GameModIds: "123456789,987654321"
-      OCC_ark_SessionName: "Zok's Generation IV - The Island"
-      OCC_arkopt_clusterid: *nhcluster
-      OCL_config_1: occ+bashlike:/etc/arkmanager/arkmanager.cfg?k=arkMaxBackupSizeMB&v=800
-      OCL_config_2: occ+bashlike:/etc/arkmanager/arkmanager.cfg?k=arkprecisewarn&c
-      
+    volumes:
+      - "gamefiles:/ark"
+      - "backups:/arkbackups"
 
   &instance island:
     x-steamport: &steamport "27000:27000/udp"
@@ -51,6 +38,7 @@ services:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
+      OCC_serverMap: "TheIsland"
       OCC_ARK_GameModIds: "123456789,987654321"
       OCC_ARK_SessionName: "Zok's Generation IV - The Island"
       OCC_ARKOPT_clusterid: *nhcluster
@@ -63,6 +51,7 @@ services:
   &instance valguero:
     x-steamport: &steamport "27002:27002/udp"
     x-gameport: &gameport "17002:17002/udp"
+    <<: *common
     ports: 
       - *steamport
       - *gameport
@@ -71,13 +60,17 @@ services:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
-      ARK_GameModIds: "123456789,987654321"
+      OCC_ARK_GameModIds: "123456789,987654321"
+      OCC_ARK_SessionName: "Zok's Generation IV - Valguero"
+      OCC_ARKOPT_clusterid: *nhcluster
       <<: *common-env
-    #volumes:
-    #  <<: *common-volumes
+    volumes:
+      - "valguero:/ark/server/ShooterGame/Saved"
+      - "gamefiles:/ark"
+      - "backups:/arkbackups"
   
-
 volumes:
   gamefiles:
   backups:
   island:
+  valguero:

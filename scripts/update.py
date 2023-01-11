@@ -25,5 +25,5 @@ if Path("/ark/server/ShooterGame").exists() and Path("/ark/server/version.txt").
     runf("arkmanager installmods")
     runf("arkmanager update --update-mods")
 else:
-    runf("arkmanager install")
+    runf("arkmanager install --verbose")
     runf("arkmanager installmods")
