@@ -4,6 +4,8 @@ x-common: &common
   image: zokradonh/ark-server-docker
   build:
     dockerfile: instance.Dockerfile
+  labels:
+    - "xyz.zok.gsc=true"
 
 x-clusters:
   - &nhcluster "newhorizon"
@@ -12,19 +14,43 @@ x-common-env: &common-env
   OCC_ark_ServerPassword: "asdf"
   OCC_arkopt_activeevent: "Summer"
   OCC_ark_MaxPlayers: 60
+  OCC_arkflag_NoBattlEye: true
+
+x-nh-env: &nh-env
+  OCC_ark_GameModIds: "731604991"
+  OCC_ark_SessionName: "Zok's Generation IV"
+  OCC_arkopt_clusterid: *nhcluster
 
 services:
   webapi:
     image: hello-world
 
+  ftp:
+    image: crazymax/pure-ftpd
+    restart: unless-stopped
+    ports:
+      - "2100:2100"
+      - "30000-30009:30000-30009"
+    environment:
+      - "TZ=Europe/Berlin"
+      - "AUTH_METHOD=puredb"
+    volumes:
+      - "ftp:/data"
+      - "gamefiles:/ark"
+      - "island:/arks/island"
+      - "valguero:/arks/valguero"
+
   updater:
-    <<: *common
+    image: zokradonh/ark-server-docker
+    build:
+      dockerfile: instance.Dockerfile
     restart: "no"
     environment:
       UTILITY: "update"
     volumes:
       - "gamefiles:/ark"
-      - "backups:/arkbackups"
+    labels:
+      - "xyz.zok.gsc.updater=true"
 
   &instance island:
     x-steamport: &steamport "27000:27000/udp"
@@ -33,20 +59,16 @@ services:
     ports: 
       - *steamport
       - *gameport
-    <<: *common
     environment:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
-      OCC_serverMap: "TheIsland"
-      OCC_ARK_GameModIds: "123456789,987654321"
-      OCC_ARK_SessionName: "Zok's Generation IV - The Island"
-      OCC_ARKOPT_clusterid: *nhcluster
       <<: *common-env
+      <<: *nh-env
+      OCC_serverMap: "TheIsland"
     volumes:
-      - "island:/ark/server/ShooterGame/Saved"
       - "gamefiles:/ark"
-      - "backups:/arkbackups"
+      - "island:/ark/server/ShooterGame/Saved"
 
   &instance valguero:
     x-steamport: &steamport "27002:27002/udp"
@@ -55,22 +77,19 @@ services:
     ports: 
       - *steamport
       - *gameport
-    <<: *common
     environment:
       STEAMPORT: *steamport
       GAMEPORT: *gameport
       INSTANCE_NAME: *instance
-      OCC_ARK_GameModIds: "123456789,987654321"
-      OCC_ARK_SessionName: "Zok's Generation IV - Valguero"
-      OCC_ARKOPT_clusterid: *nhcluster
       <<: *common-env
+      <<: *nh-env
+      OCC_serverMap: "Valguero"
     volumes:
-      - "valguero:/ark/server/ShooterGame/Saved"
       - "gamefiles:/ark"
-      - "backups:/arkbackups"
-  
+      - "valguero:/ark/server/ShooterGame/Saved"
+
 volumes:
+  ftp:
   gamefiles:
-  backups:
   island:
   valguero:
